@@ -12,6 +12,9 @@ configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
+	configureEach {
+		exclude group: 'org.apache.commons', module: 'commons-lang3'
+	}
 }
 
 repositories {
