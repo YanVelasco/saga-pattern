@@ -99,6 +99,7 @@ services:
       - --reserve-memory 0M
       - --overprovisioned
     ports:
+      - "2181:2181"
       - "9092:9092"
       - "18081:18081"
       - "18082:18082"
