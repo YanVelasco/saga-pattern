@@ -1,0 +1,64 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+.gitlab-ci.yml
+*.yml
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+docs
+
+# Docker
+docker-compose*.yml
+Dockerfile
+.dockerignore
+
+# Logs
+*.log
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependencies
+node_modules
+target
+build
+dist
+out
+*.jar
+*.war
+*.ear
+
+# Testing
+coverage
+*.test
+*.spec
+.pytest_cache
+__pycache__
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.env
+
+# Data
+data
+*.sql
+*.db
+*.sqlite
