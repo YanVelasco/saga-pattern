@@ -136,6 +136,95 @@ services:
       kafka:
         condition: service_healthy
 
+  order-service:
+    build: './order-service'
+    container_name: order-service
+    restart: always
+    depends_on:
+      - kafka
+      - order_db
+    networks:
+      - orchestrator-saga
+    environment:
+      - KAFKA_BROKER=kafka:29092
+      - MONGO_DB_URI=mongodb://admin:123456@order_db:27017/order_db?authSource=admin
+    ports:
+      - "3000:3000"
+
+  orquestrator-service:
+    build: './orchestrator-service'
+    container_name: orchestrator-service
+    restart: always
+    depends_on:
+      - kafka
+      - order-service
+      - product-validation-service
+      - payment-service
+      - inventory-service
+    networks:
+      - orchestrator-saga
+    environment:
+      - KAFKA_BROKER=kafka:29092
+    ports:
+      - "8080:8080"
+
+  product-validation-service:
+    build: './product-validation-service'
+    container_name: product-validation-service
+    restart: always
+    depends_on:
+      - kafka
+      - product_db
+    networks:
+      - orchestrator-saga
+    environment:
+        - KAFKA_BROKER=kafka:29092
+        - DB_HOST=product_db
+        - DB_PORT=5432
+        - DB_NAME=product_db
+        - DB_USER=admin
+        - DB_PASSWORD=123456
+    ports:
+      - "8090:8090"
+
+  payment-service:
+      build: './payment-service'
+      container_name: payment-service
+      restart: always
+      depends_on:
+          - kafka
+          - payment_db
+      networks:
+          - orchestrator-saga
+      environment:
+          - KAFKA_BROKER=kafka:29092
+          - DB_HOST=payment_db
+          - DB_PORT=5432
+          - DB_NAME=payment_db
+          - DB_USER=admin
+          - DB_PASSWORD=123456
+      ports:
+          - "8091:8091"
+
+  inventory-service:
+    build: './inventory-service'
+    container_name: inventory-service
+    restart: always
+    depends_on:
+        - kafka
+        - inventory_db
+    networks:
+        - orchestrator-saga
+    environment:
+        - KAFKA_BROKER=kafka:29092
+        - DB_HOST=inventory_db
+        - DB_PORT=5432
+        - DB_NAME=inventory_db
+        - DB_USER=admin
+        - DB_PASSWORD=123456
+    ports:
+        - "8092:8092"
+
 networks:
   orchestrator-saga:
     driver: bridge

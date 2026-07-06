@@ -5,7 +5,7 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://admin:123456@localhost:27017/order_db?authSource=admin
+      uri: ${MONGO_DB_URI:mongodb://admin:123456@localhost:27017/order_db?authSource=admin}
       database: order_db
       auto-index-creation: true
 
