@@ -1,6 +1,8 @@
-package kafka;
+package br.com.microservices.orchestrated.orchestratorservice.configs.kafka;
 
+import br.com.microservices.orchestrated.orchestratorservice.core.enums.Topics;
 import lombok.RequiredArgsConstructor;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -9,8 +11,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
+import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +22,9 @@ import java.util.Map;
 @EnableKafka
 @RequiredArgsConstructor
 public class KafkaConfig {
+
+    private static final Integer PARTITIONS_COUNT = 1;
+    private static final Integer REPLICATION_COUNT = 1;
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
@@ -65,6 +72,23 @@ public class KafkaConfig {
     @Bean
     public KafkaTemplate<String, String> kafkaTemplate(ProducerFactory<String, String> producerFactory) {
         return new KafkaTemplate<>(producerFactory);
+    }
+
+    private NewTopic buildTopic(String name) {
+        return TopicBuilder
+                .name(name)
+                .replicas(REPLICATION_COUNT)
+                .partitions(PARTITIONS_COUNT)
+                .build();
+    }
+
+    @Bean
+    public KafkaAdmin.NewTopics kafkaTopics() {
+        return new KafkaAdmin.NewTopics(
+                Arrays.stream(Topics.values())
+                        .map(topic -> buildTopic(topic.getTopic()))
+                        .toArray(NewTopic[]::new)
+        );
     }
 
 }

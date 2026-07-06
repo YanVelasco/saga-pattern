@@ -23,7 +23,7 @@ spring:
     topic:
       inventory-success: inventory-success
       inventory-fail: inventory-fail
-      orquestrator: orchestrator
+      orchestrator: orchestrator
     consumer:
       group-id: inventory-group
       auto-offset-reset: latest
