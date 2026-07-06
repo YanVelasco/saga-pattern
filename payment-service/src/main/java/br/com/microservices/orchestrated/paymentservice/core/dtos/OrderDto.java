@@ -1,6 +1,5 @@
 package br.com.microservices.orchestrated.paymentservice.core.dtos;
 
-import br.com.microservices.orchestrated.productvalidationservice.core.dtos.ProductDto;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
