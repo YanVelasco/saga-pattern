@@ -1,6 +1,8 @@
 package br.com.microservices.orchestrated.orderservice.core.document;
 
 import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,8 +12,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Document(collection = "events")
 public class EventDocument {
-
+    @Id
     private String eventId;
     private String transactionId;
     private String orderId;
