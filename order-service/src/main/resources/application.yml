@@ -23,3 +23,13 @@ logging:
     org:
       apache:
         kafka: off
+      springframework:
+        data:
+          mongodb:
+            core:
+              MongoTemplate: DEBUG
+    br:
+      com:
+        microservices:
+          orchestrated:
+            orderservice: DEBUG

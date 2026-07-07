@@ -1,0 +1,26 @@
+package br.com.microservices.orchestrated.orderservice.core.controllers;
+
+import br.com.microservices.orchestrated.orderservice.core.document.EventDocument;
+import br.com.microservices.orchestrated.orderservice.core.dtos.FiltersDto;
+import br.com.microservices.orchestrated.orderservice.core.services.EventService;
+import lombok.AllArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@AllArgsConstructor
+@RequestMapping("/api/event")
+public class EventController {
+
+    private final EventService eventService;
+
+    @GetMapping
+    public List<EventDocument> findAll(@ModelAttribute FiltersDto filtersDto) {
+        return eventService.findAll(filtersDto);
+    }
+
+}

@@ -1,6 +1,7 @@
 package br.com.microservices.orchestrated.orderservice.configs.exceptions.globalexception;
 
 import br.com.microservices.orchestrated.orderservice.configs.exceptions.ErrorToSendEvent;
+import br.com.microservices.orchestrated.orderservice.configs.exceptions.EventNotFoundException;
 import br.com.microservices.orchestrated.orderservice.configs.exceptions.ValidationException;
 import br.com.microservices.orchestrated.orderservice.configs.exceptions.response.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -199,6 +200,22 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(EventNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleEventNotFoundException(
+            EventNotFoundException exception,
+            WebRequest request) {
+        log.error("Evento não encontrado: {}", exception.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "EVENT_NOT_FOUND",
+                exception.getMessage(),
+                request.getDescription(false).replace("uri=", "")
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
 }
