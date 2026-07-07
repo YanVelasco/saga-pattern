@@ -1,5 +1,6 @@
 package br.com.microservices.orchestrated.paymentservice.configs.exceptions.globalexception;
 
+import br.com.microservices.orchestrated.paymentservice.configs.exceptions.ErrorToSendEvent;
 import br.com.microservices.orchestrated.paymentservice.configs.exceptions.ValidationException;
 import br.com.microservices.orchestrated.paymentservice.configs.exceptions.response.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -184,6 +185,20 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(ErrorToSendEvent.class)
+    public ResponseEntity<ErrorResponse> handleErrorToSendEvent(ErrorToSendEvent exception){
+        log.error("Erro ao enviar evento para o Kafka", exception);
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "ERROR_TO_SEND_EVENT",
+                "Erro ao enviar evento para o Kafka",
+                exception.getMessage()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }
