@@ -23,9 +23,9 @@ public class JsonUtil {
         }
     }
 
-    public EventDto toJson(String json) {
+    public EventDto toEvent(String json) {
         try {
-            log.info("Converting object to JSON: {}", json);
+            log.info("Converting object to Event: {}", json);
             return objectMapper.readValue(json, EventDto.class);
         } catch (Exception e) {
             log.error("Error converting object to JSON: {}", json, e);
