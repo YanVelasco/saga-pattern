@@ -1,7 +1,6 @@
 package br.com.microservices.orchestrated.productvalidationservice.configs.exceptions.globalexception;
 
-import br.com.microservices.orchestrated.productvalidationservice.configs.exceptions.ErrorToSendEvent;
-import br.com.microservices.orchestrated.productvalidationservice.configs.exceptions.ValidationException;
+import br.com.microservices.orchestrated.productvalidationservice.configs.exceptions.*;
 import br.com.microservices.orchestrated.productvalidationservice.configs.exceptions.response.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -199,6 +198,78 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+
+    @ExceptionHandler(PayloadIsEmptyException.class)
+    public ResponseEntity<ErrorResponse> handlePayloadIsEmptyException(){
+        log.error("Payload ou lista de produtos está vazia");
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "PAYLOAD_IS_EMPTY",
+                "Payload ou lista de produtos está vazia",
+                "Payload ou lista de produtos está vazia"
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(OrderIdOrTransactionIdIsMissing.class)
+    public ResponseEntity<ErrorResponse> handleOrderIdOrTransactionIdIsMissing(){
+        log.error("Order ID ou Transaction ID está ausente");
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "ORDER_ID_OR_TRANSACTION_ID_IS_MISSING",
+                "Order ID ou Transaction ID está ausente",
+                "Order ID ou Transaction ID está ausente"
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(AlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleAlreadyExistsException(){
+
+        log.error("Validação já existe para o orderId e transactionId fornecidos");
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "ALREADY_EXISTS",
+                "Validação já existe para o orderId e transactionId fornecidos",
+                "Validação já existe para o orderId e transactionId fornecidos"
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(ProductOrCodeIsMissing.class)
+    public ResponseEntity<ErrorResponse> handleProductOrCodeIsMissing(){
+        log.error("Produto ou código do produto está ausente");
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "PRODUCT_OR_CODE_IS_MISSING",
+                "Produto ou código do produto está ausente",
+                "Produto ou código do produto está ausente"
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(NotExistsException.class)
+    public ResponseEntity<ErrorResponse> handleNotExistsException(){
+        log.error("Produto com o código fornecido não existe");
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "NOT_EXISTS",
+                "Produto com o código fornecido não existe",
+                "Produto com o código fornecido não existe"
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
 }

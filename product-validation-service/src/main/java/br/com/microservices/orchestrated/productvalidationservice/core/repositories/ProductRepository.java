@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ProductRepository extends JpaRepository<ProductModel, Integer> {
 
-    Boolean existsByCode(String code);
+    boolean existsByCode(String code);
 
 }
