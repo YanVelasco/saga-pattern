@@ -1,6 +1,5 @@
 package br.com.microservices.orchestrated.productvalidationservice.core.repositories;
 
-import br.com.microservices.orchestrated.productvalidationservice.core.model.ProductModel;
 import br.com.microservices.orchestrated.productvalidationservice.core.model.ValidationModel;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -11,5 +10,5 @@ public interface ValidationRepository extends JpaRepository<ValidationModel, Int
     Boolean existsByOrderIdAndTransactionId(String orderId, String transactionId);
 
     Optional<ValidationModel> findByOrderIdAndTransactionId(String orderId, String transactionId);
-    
+
 }
