@@ -4,6 +4,7 @@ import br.com.microservices.orchestrated.paymentservice.core.enums.SagaStatus;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Builder(toBuilder = true)
@@ -17,4 +18,19 @@ public record EventDto(
         List<HistoryDto> eventHistory,
         LocalDateTime createdAt
 ) {
+
+    public EventDto addToHistory(HistoryDto history) {
+        List<HistoryDto> newHistory = new ArrayList<>();
+
+        if (this.eventHistory != null) {
+            newHistory.addAll(this.eventHistory);
+        }
+
+        newHistory.add(history);
+
+        return this.toBuilder()
+                .eventHistory(newHistory)
+                .build();
+    }
+
 }

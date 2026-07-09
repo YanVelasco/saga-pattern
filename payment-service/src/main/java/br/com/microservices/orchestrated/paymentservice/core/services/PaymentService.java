@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
+import static br.com.microservices.orchestrated.paymentservice.core.enums.SagaStatus.FAIL;
+import static br.com.microservices.orchestrated.paymentservice.core.enums.SagaStatus.ROLLBACK_PENDING;
 import static br.com.microservices.orchestrated.paymentservice.core.enums.SagaStatus.SUCCESS;
 
 @Slf4j
@@ -43,6 +45,7 @@ public class PaymentService {
             changePaymentToSuccessStatus(payment);
         } catch (Exception e) {
             log.error("Error realizing payment for event: {}", eventDto, e);
+            eventDto = handleFailCurrentNotExecuted(eventDto, e.getMessage());
         }
 
         kafkaProducer.sendEvent(jsonUtil.toJson(eventDto));
@@ -145,6 +148,42 @@ public class PaymentService {
                 .build();
 
         return eventDto.addToHistory(history);
+    }
+
+    private EventDto handleFailCurrentNotExecuted(EventDto eventDto, String message) {
+        eventDto = eventDto.toBuilder()
+                .status(ROLLBACK_PENDING)
+                .source(CURRENT_SOURCE)
+                .build();
+
+        eventDto = addHistory(eventDto, "Fail to realize payment: " + message);
+
+        return eventDto;
+    }
+
+    public void rollbackEvent(EventDto eventDto) {
+        try {
+            eventDto = changePaymentStatusToRefunded(eventDto);
+            log.info("Rollback completed for orderId: {}", eventDto.orderId());
+        } catch (Exception e) {
+            log.error("Error rolling back payment, but continuing rollback: {}", e.getMessage());
+        }
+
+        var eventToRollback = eventDto.toBuilder()
+                .status(FAIL)
+                .source(CURRENT_SOURCE)
+                .build();
+
+        eventToRollback = addHistory(eventToRollback, "Rollback executed for event: " + eventDto.eventId() + " on payment");
+
+        kafkaProducer.sendEvent(jsonUtil.toJson(eventToRollback));
+    }
+
+    private EventDto changePaymentStatusToRefunded(EventDto eventDto) {
+        var payment = findPaymentByOrderIdAndTransactionId(eventDto);
+        payment.setPaymentStatus(PaymentStatus.REFUND);
+        savePayment(payment);
+        return setEventAmountItems(eventDto, payment);
     }
 
 }

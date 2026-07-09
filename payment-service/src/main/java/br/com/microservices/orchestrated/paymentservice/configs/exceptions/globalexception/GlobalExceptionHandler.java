@@ -1,8 +1,6 @@
 package br.com.microservices.orchestrated.paymentservice.configs.exceptions.globalexception;
 
-import br.com.microservices.orchestrated.paymentservice.configs.exceptions.ErrorToSendEvent;
-import br.com.microservices.orchestrated.paymentservice.configs.exceptions.PaymentAlreadyExists;
-import br.com.microservices.orchestrated.paymentservice.configs.exceptions.ValidationException;
+import br.com.microservices.orchestrated.paymentservice.configs.exceptions.*;
 import br.com.microservices.orchestrated.paymentservice.configs.exceptions.response.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -189,7 +187,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ErrorToSendEvent.class)
-    public ResponseEntity<ErrorResponse> handleErrorToSendEvent(ErrorToSendEvent exception){
+    public ResponseEntity<ErrorResponse> handleErrorToSendEvent(ErrorToSendEvent exception) {
         log.error("Erro ao enviar evento para o Kafka", exception);
 
         ErrorResponse errorResponse = new ErrorResponse(
@@ -203,17 +201,54 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(PaymentAlreadyExists.class)
-    public ResponseEntity<ErrorResponse> handlePaymentAlreadyExists(){
+    public ResponseEntity<ErrorResponse> handlePaymentAlreadyExists(
+            PaymentAlreadyExists ex,
+            WebRequest request
+    ) {
         log.error("Pagamento já processado");
 
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
                 "PAYMENT_ALREADY_EXISTS",
-                "Pagamento já processado",
-                "O pagamento para este pedido e transação já foi realizado."
+                ex.getMessage(),
+                request.getDescription(false).replace("uri=", "")
         );
 
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFoundException(
+            NotFoundException ex,
+            WebRequest request
+    ) {
+        log.error("Recurso não encontrado");
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "RESOURCE_NOT_FOUND",
+                ex.getMessage(),
+                request.getDescription(false).replace("uri=", "")
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(AmountValidationException.class)
+    public ResponseEntity<ErrorResponse> handleAmountValidationException(
+            AmountValidationException ex,
+            WebRequest request
+    ){
+        log.error("Erro de validação de valor");
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "AMOUNT_VALIDATION_ERROR",
+                ex.getMessage(),
+                request.getDescription(false).replace("uri=", "")
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
 }

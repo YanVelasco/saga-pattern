@@ -3,6 +3,7 @@ package br.com.microservices.orchestrated.productvalidationservice.core.services
 import br.com.microservices.orchestrated.productvalidationservice.configs.exceptions.*;
 import br.com.microservices.orchestrated.productvalidationservice.core.dtos.EventDto;
 import br.com.microservices.orchestrated.productvalidationservice.core.dtos.HistoryDto;
+import br.com.microservices.orchestrated.productvalidationservice.core.dtos.OrderProductsDto;
 import br.com.microservices.orchestrated.productvalidationservice.core.dtos.ProductDto;
 import br.com.microservices.orchestrated.productvalidationservice.core.model.ValidationModel;
 import br.com.microservices.orchestrated.productvalidationservice.core.producers.KafkaProducer;
@@ -55,8 +56,8 @@ public class ProductValidationService {
         }
 
         eventDto.payload().products().forEach(product -> {
-            validateProductInformed(product);
-            validateExistingProducts(product.code());
+            validateProductInformed(product.product());
+            validateExistingProducts(product.product().code());
         });
     }
 
