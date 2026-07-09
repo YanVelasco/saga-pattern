@@ -1,6 +1,7 @@
 package br.com.microservices.orchestrated.paymentservice.configs.exceptions.globalexception;
 
 import br.com.microservices.orchestrated.paymentservice.configs.exceptions.ErrorToSendEvent;
+import br.com.microservices.orchestrated.paymentservice.configs.exceptions.PaymentAlreadyExists;
 import br.com.microservices.orchestrated.paymentservice.configs.exceptions.ValidationException;
 import br.com.microservices.orchestrated.paymentservice.configs.exceptions.response.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -199,6 +200,20 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(PaymentAlreadyExists.class)
+    public ResponseEntity<ErrorResponse> handlePaymentAlreadyExists(){
+        log.error("Pagamento já processado");
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "PAYMENT_ALREADY_EXISTS",
+                "Pagamento já processado",
+                "O pagamento para este pedido e transação já foi realizado."
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
 }

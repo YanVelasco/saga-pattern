@@ -2,10 +2,7 @@ package br.com.microservices.orchestrated.paymentservice.core.model;
 
 import br.com.microservices.orchestrated.paymentservice.core.dtos.PaymentStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -18,6 +15,7 @@ import java.time.ZoneId;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class PaymentModel implements Serializable {
 
     @Serial
