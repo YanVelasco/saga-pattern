@@ -16,8 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-import static br.com.microservices.orchestrated.productvalidationservice.core.enums.SagaStatus.FAIL;
-import static br.com.microservices.orchestrated.productvalidationservice.core.enums.SagaStatus.SUCCESS;
+import static br.com.microservices.orchestrated.productvalidationservice.core.enums.SagaStatus.*;
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 @Slf4j
@@ -37,7 +36,7 @@ public class ProductValidationService {
         try {
             log.info("Validating existing products for event: {}", eventDto);
             checkCurrentValidation(eventDto);
-            createValidation(eventDto);
+            createValidation(eventDto, true);
             eventDto = handleSuccess(eventDto);
         } catch (Exception e) {
             log.error("Error validating existing products for event: {}", eventDto, e);
@@ -57,7 +56,7 @@ public class ProductValidationService {
 
         eventDto.payload().products().forEach(product -> {
             validateProductInformed(product);
-            validadeExistingProducts(product.code());
+            validateExistingProducts(product.code());
         });
     }
 
@@ -71,23 +70,23 @@ public class ProductValidationService {
         }
     }
 
-    public void validateProductInformed(ProductDto productDto) {
+    private void validateProductInformed(ProductDto productDto) {
         if (isEmpty(productDto) || isEmpty(productDto.code())) {
             throw new ProductOrCodeIsMissing("Product or product code is empty");
         }
     }
 
-    public void validadeExistingProducts(String code) {
+    private void validateExistingProducts(String code) {
         if (!productRepository.existsByCode(code)) {
             throw new NotExistsException("Product with code " + code + " does not exist");
         }
     }
 
-    private void createValidation(EventDto eventDto) {
+    private void createValidation(EventDto eventDto, boolean success) {
         var validation = ValidationModel.builder()
                 .orderId(eventDto.payload().orderId())
-                .transactionId(eventDto.transactionId())
-                .success(true)
+                .transactionId(eventDto.payload().transactionId())
+                .success(success)
                 .build();
 
         validationRepository.save(validation);
@@ -100,18 +99,7 @@ public class ProductValidationService {
                 .build();
 
         eventDto = addHistory(eventDto, "Product validation successful");
-        
-        return eventDto;
-    }
 
-    private EventDto handleFailCurrentNotExecuted(EventDto eventDto, String message) {
-        eventDto = eventDto.toBuilder()
-                .status(FAIL)
-                .source(CURRENT_SOURCE)
-                .build();
-
-        eventDto = addHistory(eventDto, "Product validation failed: " + message);
-        
         return eventDto;
     }
 
@@ -125,6 +113,60 @@ public class ProductValidationService {
                 .build();
 
         return eventDto.addToHistory(history);
+    }
+
+    private EventDto handleFailCurrentNotExecuted(EventDto eventDto, String message) {
+        eventDto = eventDto.toBuilder()
+                .status(ROLLBACK_PENDING)
+                .source(CURRENT_SOURCE)
+                .build();
+
+        eventDto = addHistory(eventDto, "Product validation failed: " + message);
+
+        return eventDto;
+    }
+
+    public void rollbackEvent(EventDto eventDto) {
+        try {
+            changeValidationToFail(eventDto);
+            log.info("Rollback completed for orderId: {}", eventDto.payload().orderId());
+        } catch (Exception e) {
+            log.error("Error changing validation to fail, but continuing rollback: {}", e.getMessage());
+        }
+
+        var eventToRollback = eventDto.toBuilder()
+                .status(FAIL)
+                .source(CURRENT_SOURCE)
+                .build();
+
+        eventToRollback = addHistory(eventToRollback, "Rollback executed for event: " + eventDto.eventId() + " on product validation");
+
+        kafkaProducer.sendEvent(jsonUtil.toJson(eventToRollback));
+    }
+
+    private void changeValidationToFail(EventDto eventDto) {
+        if (isEmpty(eventDto.payload())) {
+            log.warn("Payload is empty for rollback event: {}", eventDto.eventId());
+            return;
+        }
+
+        validationRepository.findByOrderIdAndTransactionId(
+                        eventDto.payload().orderId(),
+                        eventDto.payload().transactionId()
+                )
+                .ifPresentOrElse(
+                        validation -> {
+                            validation.setSuccess(false);
+                            validationRepository.save(validation);
+                            log.info("Validation rolled back for orderId: {} and transactionId: {}",
+                                    eventDto.payload().orderId(), eventDto.payload().transactionId());
+                        },
+                        () -> {
+                            createValidation(eventDto, false);
+                            log.info("Validation not found, created new failed validation for orderId: {} and transactionId: {}",
+                                    eventDto.payload().orderId(), eventDto.payload().transactionId());
+                        }
+                );
     }
 
 }

@@ -1,0 +1,15 @@
+INSERT INTO product (product_id, code) VALUES (1, 'LAPTOP_DELL_XPS15');
+INSERT INTO product (product_id, code) VALUES (2, 'MOUSE_LOGITECH_MX3');
+INSERT INTO product (product_id, code) VALUES (3, 'KEYBOARD_MECHANICAL_RGB');
+INSERT INTO product (product_id, code) VALUES (4, 'MONITOR_LG_27_4K');
+INSERT INTO product (product_id, code) VALUES (5, 'HEADSET_HYPERX_CLOUD');
+INSERT INTO product (product_id, code) VALUES (6, 'WEBCAM_LOGITECH_C920');
+INSERT INTO product (product_id, code) VALUES (7, 'USB_CABLE_TYPE_C');
+INSERT INTO product (product_id, code) VALUES (8, 'SSD_SAMSUNG_1TB');
+INSERT INTO product (product_id, code) VALUES (9, 'RAM_DDR4_16GB');
+INSERT INTO product (product_id, code) VALUES (10, 'CHAIR_GAMER_DT3');
+INSERT INTO product (product_id, code) VALUES (11, 'DESK_STANDING_ELECTRIC');
+INSERT INTO product (product_id, code) VALUES (12, 'NOTEBOOK_STAND_ALUMINUM');
+INSERT INTO product (product_id, code) VALUES (13, 'HDMI_CABLE_2M');
+INSERT INTO product (product_id, code) VALUES (14, 'POWERBANK_20000MAH');
+INSERT INTO product (product_id, code) VALUES (15, 'MOUSEPAD_XXL_RGB');
