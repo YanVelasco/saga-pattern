@@ -1,0 +1,317 @@
+================================================================
+  SAGA PATTERN - CORPOS DE REQUISIÇÃO PARA TESTE NO REDPANDA
+================================================================
+
+ESTRUTURA DE PRODUTOS (igual nos dois serviços):
+  {
+    "product": { "code": "...", "unitValue": 0.0 },
+    "quantity": 1
+  }
+
+PRODUTOS VÁLIDOS:
+  LAPTOP_DELL_XPS15     | MOUSE_LOGITECH_MX3    | KEYBOARD_MECHANICAL_RGB
+  MONITOR_LG_27_4K      | HEADSET_HYPERX_CLOUD   | WEBCAM_LOGITECH_C920
+  USB_CABLE_TYPE_C      | SSD_SAMSUNG_1TB        | RAM_DDR4_16GB
+  CHAIR_GAMER_DT3       | DESK_STANDING_ELECTRIC | NOTEBOOK_STAND_ALUMINUM
+  HDMI_CABLE_2M         | POWERBANK_20000MAH     | MOUSEPAD_XXL_RGB
+
+================================================================
+  [1] PRODUCT-VALIDATION-SERVICE - SUCESSO
+  Tópico: product-validation-success
+================================================================
+{
+  "eventId": "evt-001",
+  "transactionId": "txn-001",
+  "orderId": "order-001",
+  "payload": {
+    "orderId": "order-001",
+    "transactionId": "txn-001",
+    "products": [
+      {
+        "product": {
+          "code": "LAPTOP_DELL_XPS15",
+          "unitValue": 5999.99
+        },
+        "quantity": 1
+      },
+      {
+        "product": {
+          "code": "MOUSE_LOGITECH_MX3",
+          "unitValue": 299.99
+        },
+        "quantity": 2
+      }
+    ],
+    "createdAt": "2026-07-09T14:00:00",
+    "totalAmount": 0,
+    "totalItems": 0
+  },
+  "source": "ORDER_SERVICE",
+  "status": "SUCCESS",
+  "eventHistory": [
+    {
+      "source": "ORDER_SERVICE",
+      "status": "SUCCESS",
+      "message": "Order created successfully",
+      "createdAt": "2026-07-09T14:00:00"
+    }
+  ],
+  "createdAt": "2026-07-09T14:00:00"
+}
+
+Resultado esperado:
+  - Busca LAPTOP_DELL_XPS15 e MOUSE_LOGITECH_MX3 no banco -> encontra
+  - Salva validation com success=true
+  - Envia ao topico orchestrator com status=SUCCESS
+  - Log: "Product validation successful"
+
+================================================================
+  [2] PRODUCT-VALIDATION-SERVICE - ERRO (produto inexistente)
+  Topico: product-validation-success
+================================================================
+{
+  "eventId": "evt-002",
+  "transactionId": "txn-002",
+  "orderId": "order-002",
+  "payload": {
+    "orderId": "order-002",
+    "transactionId": "txn-002",
+    "products": [
+      {
+        "product": {
+          "code": "PRODUTO_INVALIDO_XYZ",
+          "unitValue": 999.99
+        },
+        "quantity": 1
+      }
+    ],
+    "createdAt": "2026-07-09T14:01:00",
+    "totalAmount": 0,
+    "totalItems": 0
+  },
+  "source": "ORDER_SERVICE",
+  "status": "SUCCESS",
+  "eventHistory": [
+    {
+      "source": "ORDER_SERVICE",
+      "status": "SUCCESS",
+      "message": "Order created successfully",
+      "createdAt": "2026-07-09T14:01:00"
+    }
+  ],
+  "createdAt": "2026-07-09T14:01:00"
+}
+
+Resultado esperado:
+  - Produto nao encontrado no banco -> lanca NotExistsException
+  - NAO salva validation
+  - Envia ao topico orchestrator com status=ROLLBACK_PENDING
+  - Log: "Product validation failed: Product with code PRODUTO_INVALIDO_XYZ does not exist"
+
+================================================================
+  [3] PRODUCT-VALIDATION-SERVICE - ROLLBACK
+  Topico: product-validation-fail
+  (use o mesmo orderId/transactionId do cenario [1])
+================================================================
+{
+  "eventId": "evt-001",
+  "transactionId": "txn-001",
+  "orderId": "order-001",
+  "payload": {
+    "orderId": "order-001",
+    "transactionId": "txn-001",
+    "products": [
+      {
+        "product": {
+          "code": "LAPTOP_DELL_XPS15",
+          "unitValue": 5999.99
+        },
+        "quantity": 1
+      }
+    ],
+    "createdAt": "2026-07-09T14:00:00",
+    "totalAmount": 6599.97,
+    "totalItems": 3
+  },
+  "source": "PAYMENT_SERVICE",
+  "status": "ROLLBACK_PENDING",
+  "eventHistory": [
+    {
+      "source": "ORDER_SERVICE",
+      "status": "SUCCESS",
+      "message": "Order created successfully",
+      "createdAt": "2026-07-09T14:00:00"
+    },
+    {
+      "source": "PRODUCT_VALIDATION_SERVICE",
+      "status": "SUCCESS",
+      "message": "Product validation successful",
+      "createdAt": "2026-07-09T14:00:10"
+    },
+    {
+      "source": "PAYMENT_SERVICE",
+      "status": "ROLLBACK_PENDING",
+      "message": "Payment failed",
+      "createdAt": "2026-07-09T14:00:20"
+    }
+  ],
+  "createdAt": "2026-07-09T14:00:00"
+}
+
+Resultado esperado:
+  - Busca validation por order-001/txn-001 -> encontra
+  - Atualiza validation: success=false (UPDATE no banco)
+  - Envia ao topico orchestrator com status=FAIL
+  - Log: "Validation rolled back for orderId: order-001"
+  - Log: "Rollback executed for event: evt-001 on product validation"
+
+================================================================
+  [4] PAYMENT-SERVICE - SUCESSO
+  Topico: payment-success
+  (envie APOS o cenario [1] ter sido processado)
+================================================================
+{
+  "eventId": "evt-001",
+  "transactionId": "txn-001",
+  "orderId": "order-001",
+  "payload": {
+    "orderId": "order-001",
+    "transactionId": "txn-001",
+    "products": [
+      {
+        "product": {
+          "code": "LAPTOP_DELL_XPS15",
+          "unitValue": 5999.99
+        },
+        "quantity": 1
+      },
+      {
+        "product": {
+          "code": "MOUSE_LOGITECH_MX3",
+          "unitValue": 299.99
+        },
+        "quantity": 2
+      }
+    ],
+    "createdAt": "2026-07-09T14:00:00",
+    "totalAmount": 0,
+    "totalItems": 0
+  },
+  "source": "PRODUCT_VALIDATION_SERVICE",
+  "status": "SUCCESS",
+  "eventHistory": [
+    {
+      "source": "ORDER_SERVICE",
+      "status": "SUCCESS",
+      "message": "Order created successfully",
+      "createdAt": "2026-07-09T14:00:00"
+    },
+    {
+      "source": "PRODUCT_VALIDATION_SERVICE",
+      "status": "SUCCESS",
+      "message": "Product validation successful",
+      "createdAt": "2026-07-09T14:00:10"
+    }
+  ],
+  "createdAt": "2026-07-09T14:00:00"
+}
+
+Resultado esperado:
+  - totalAmount calculado: 5999.99 + (299.99 x 2) = 6599.97
+  - totalItems calculado: 1 + 2 = 3
+  - Salva payment com status=PENDING, depois atualiza para SUCCESS
+  - Envia ao topico orchestrator com status=SUCCESS
+  - Log: "Payment realized successfully"
+
+================================================================
+  [5] PAYMENT-SERVICE - ERRO (pagamento duplicado)
+  Topico: payment-success
+  (envie o mesmo payload do cenario [4] novamente)
+================================================================
+
+  -> Use exatamente o mesmo JSON do cenario [4]
+
+Resultado esperado:
+  - Detecta que ja existe payment com order-001/txn-001
+  - Lanca PaymentAlreadyExists
+  - Envia ao topico orchestrator com status=ROLLBACK_PENDING
+  - Log: "Payment already processed for orderId: order-001"
+
+================================================================
+  [6] PAYMENT-SERVICE - ROLLBACK
+  Topico: payment-fail
+  (use o mesmo orderId/transactionId do cenario [4])
+================================================================
+{
+  "eventId": "evt-001",
+  "transactionId": "txn-001",
+  "orderId": "order-001",
+  "payload": {
+    "orderId": "order-001",
+    "transactionId": "txn-001",
+    "products": [
+      {
+        "product": {
+          "code": "LAPTOP_DELL_XPS15",
+          "unitValue": 5999.99
+        },
+        "quantity": 1
+      }
+    ],
+    "createdAt": "2026-07-09T14:00:00",
+    "totalAmount": 6599.97,
+    "totalItems": 3
+  },
+  "source": "INVENTORY_SERVICE",
+  "status": "ROLLBACK_PENDING",
+  "eventHistory": [
+    {
+      "source": "ORDER_SERVICE",
+      "status": "SUCCESS",
+      "message": "Order created successfully",
+      "createdAt": "2026-07-09T14:00:00"
+    },
+    {
+      "source": "PRODUCT_VALIDATION_SERVICE",
+      "status": "SUCCESS",
+      "message": "Product validation successful",
+      "createdAt": "2026-07-09T14:00:10"
+    },
+    {
+      "source": "PAYMENT_SERVICE",
+      "status": "SUCCESS",
+      "message": "Payment realized successfully",
+      "createdAt": "2026-07-09T14:00:20"
+    },
+    {
+      "source": "INVENTORY_SERVICE",
+      "status": "ROLLBACK_PENDING",
+      "message": "Inventory update failed",
+      "createdAt": "2026-07-09T14:00:30"
+    }
+  ],
+  "createdAt": "2026-07-09T14:00:00"
+}
+
+Resultado esperado:
+  - Busca payment por order-001/txn-001 -> encontra
+  - Atualiza payment: status=REFUND (UPDATE no banco)
+  - Envia ao topico orchestrator com status=FAIL
+  - Log: "Rollback completed for orderId: order-001"
+  - Log: "Rollback executed for event: evt-001 on payment"
+
+================================================================
+  RESUMO - ORDEM RECOMENDADA DE TESTES
+================================================================
+
+  #  | Servico                    | Topico                      | Cenario               | Status Esperado
+  ---|----------------------------|-----------------------------|------------------------|----------------
+  1  | product-validation-service | product-validation-success  | Produto valido         | SUCCESS
+  2  | product-validation-service | product-validation-success  | Produto invalido       | ROLLBACK_PENDING
+  3  | product-validation-service | product-validation-fail     | Rollback validacao     | FAIL
+  4  | payment-service            | payment-success             | Pagamento com sucesso  | SUCCESS
+  5  | payment-service            | payment-success             | Pagamento duplicado    | ROLLBACK_PENDING
+  6  | payment-service            | payment-fail                | Rollback pagamento     | FAIL + REFUND no banco
+
+DICA: Execute os cenarios 1 e 4 primeiro (com o mesmo orderId/transactionId)
+      para depois testar os rollbacks 3 e 6 sobre dados existentes no banco.

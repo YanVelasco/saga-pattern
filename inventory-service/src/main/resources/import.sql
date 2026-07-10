@@ -1,0 +1,15 @@
+INSERT INTO inventory (inventory_id, product_code, available) VALUES (1, 'LAPTOP_DELL_XPS15', 4);
+INSERT INTO inventory (inventory_id, product_code, available) VALUES (2, 'MOUSE_LOGITECH_MX3', 10);
+INSERT INTO inventory (inventory_id, product_code, available) VALUES (3, 'KEYBOARD_MECHANICAL_RGB', 7);
+INSERT INTO inventory (inventory_id, product_code, available) VALUES (4, 'MONITOR_LG_27_4K', 5);
+INSERT INTO inventory (inventory_id, product_code, available) VALUES (5, 'HEADSET_HYPERX_CLOUD', 8);
+INSERT INTO inventory (inventory_id, product_code, available) VALUES (6, 'WEBCAM_LOGITECH_C920', 6);
+INSERT INTO inventory (inventory_id, product_code, available) VALUES (7, 'USB_CABLE_TYPE_C', 12);
+INSERT INTO inventory (inventory_id, product_code, available) VALUES (8, 'SSD_SAMSUNG_1TB', 3);
+INSERT INTO inventory (inventory_id, product_code, available) VALUES (9, 'RAM_DDR4_16GB', 15);
+INSERT INTO inventory (inventory_id, product_code, available) VALUES (10, 'CHAIR_GAMER_DT3', 7);
+INSERT INTO inventory (inventory_id, product_code, available) VALUES (11, 'DESK_STANDING_ELECTRIC', 4);
+INSERT INTO inventory (inventory_id, product_code, available) VALUES (12, 'NOTEBOOK_STAND_ALUMINUM', 9);
+INSERT INTO inventory (inventory_id, product_code, available) VALUES (13, 'HDMI_CABLE_2M', 11);
+INSERT INTO inventory (inventory_id, product_code, available) VALUES (14, 'POWERBANK_20000MAH', 6);
+INSERT INTO inventory (inventory_id, product_code, available) VALUES (15, 'MOUSEPAD_XXL_RGB', 8);
