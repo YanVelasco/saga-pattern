@@ -1,0 +1,101 @@
+JSON 1 - inventory-success (fluxo com estoque suficiente)
+{
+  "eventId": "evt-inv-success-001",
+  "transactionId": "tx-inv-001",
+  "orderId": "order-inv-001",
+  "payload": {
+    "orderId": "order-inv-001",
+    "products": [
+      {
+        "product": {
+          "code": "LAPTOP_DELL_XPS15",
+          "unitValue": 12999.90
+        },
+        "quantity": 1
+      },
+      {
+        "product": {
+          "code": "MOUSE_LOGITECH_MX3",
+          "unitValue": 499.90
+        },
+        "quantity": 2
+      }
+    ],
+    "createdAt": "2026-07-11T14:50:00",
+    "transactionId": "tx-inv-001",
+    "totalAmount": 13999.70,
+    "totalItems": 3
+  },
+  "source": "ORDER_SERVICE",
+  "status": "SUCCESS",
+  "eventHistory": [],
+  "createdAt": "2026-07-11T14:50:00"
+}
+
+JSON 2 - inventory-success (forçando erro de estoque insuficiente para testar rollback_pending)
+{
+  "eventId": "evt-inv-insufficient-001",
+  "transactionId": "tx-inv-002",
+  "orderId": "order-inv-002",
+  "payload": {
+    "orderId": "order-inv-002",
+    "products": [
+      {
+        "product": {
+          "code": "SSD_SAMSUNG_1TB",
+          "unitValue": 799.90
+        },
+        "quantity": 10
+      }
+    ],
+    "createdAt": "2026-07-11T14:51:00",
+    "transactionId": "tx-inv-002",
+    "totalAmount": 7999.00,
+    "totalItems": 10
+  },
+  "source": "ORDER_SERVICE",
+  "status": "SUCCESS",
+  "eventHistory": [],
+  "createdAt": "2026-07-11T14:51:00"
+}
+
+JSON 3 - inventory-fail (rollback manual de pedido já processado)
+{
+  "eventId": "evt-inv-rollback-001",
+  "transactionId": "tx-inv-001",
+  "orderId": "order-inv-001",
+  "payload": {
+    "orderId": "order-inv-001",
+    "products": [
+      {
+        "product": {
+          "code": "LAPTOP_DELL_XPS15",
+          "unitValue": 12999.90
+        },
+        "quantity": 1
+      },
+      {
+        "product": {
+          "code": "MOUSE_LOGITECH_MX3",
+          "unitValue": 499.90
+        },
+        "quantity": 2
+      }
+    ],
+    "createdAt": "2026-07-11T14:52:00",
+    "transactionId": "tx-inv-001",
+    "totalAmount": 13999.70,
+    "totalItems": 3
+  },
+  "source": "ORCHESTRATOR",
+  "status": "ROLLBACK_PENDING",
+  "eventHistory": [
+    {
+      "source": "PAYMENT_SERVICE",
+      "status": "ROLLBACK_PENDING",
+      "message": "Pagamento rejeitado, iniciando compensacao.",
+      "createdAt": "2026-07-11T14:52:10"
+    }
+  ],
+  "createdAt": "2026-07-11T14:52:00"
+}

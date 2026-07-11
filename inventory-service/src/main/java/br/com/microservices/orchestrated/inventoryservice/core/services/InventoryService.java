@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-import static br.com.microservices.orchestrated.inventoryservice.core.enums.SagaStatus.SUCCESS;
+import static br.com.microservices.orchestrated.inventoryservice.core.enums.SagaStatus.*;
 
 @Slf4j
 @Service
@@ -38,11 +38,13 @@ public class InventoryService {
         try {
             log.info("Updating inventory for event: {}", eventDto);
             checkCurrentValidation(eventDto);
+            checkInventory(eventDto.payload());
             createOrderInventory(eventDto);
             updateInventory(eventDto.payload());
             eventDto = handleSuccess(eventDto);
         } catch (Exception ex) {
             log.error("Error while updating inventory ", ex);
+            eventDto = handleFailCurrentNotExecuted(eventDto, ex.getMessage());
         }
         kafkaProducer.sendEvent(jsonUtil.toJson(eventDto));
     }
@@ -87,9 +89,15 @@ public class InventoryService {
         log.info("Updating inventory for order: {}", payload);
         payload.products().forEach(product -> {
             var inventory = findInventoryByProductCode(product.product().code());
-            checkInventory(inventory.getAvailable(), product.quantity());
             inventory.setAvailable(inventory.getAvailable() - product.quantity());
             inventoryRepository.save(inventory);
+        });
+    }
+
+    private void checkInventory(OrderDto payload) {
+        payload.products().forEach(product -> {
+            var inventory = findInventoryByProductCode(product.product().code());
+            checkInventory(inventory.getAvailable(), product.quantity());
         });
     }
 
@@ -122,6 +130,47 @@ public class InventoryService {
                 .build();
 
         return eventDto.addToHistory(history);
+    }
+
+    private EventDto handleFailCurrentNotExecuted(EventDto eventDto, String message) {
+        eventDto = eventDto.toBuilder()
+                .status(ROLLBACK_PENDING)
+                .source(CURRENT_SOURCE)
+                .build();
+
+        eventDto = addHistory(eventDto, "Inventory update failed: " + message);
+
+        return eventDto;
+    }
+
+    public void rollbackinventory(EventDto eventDto) {
+        log.info("Rolling back inventory for event: {}", eventDto);
+
+        try {
+            returnInventoryToPreviousValues(eventDto);
+            log.info("Rollback completed for orderId: {}", eventDto.orderId());
+        } catch (Exception e) {
+            log.error("Error rolling back inventory, but continuing rollback: {}", e.getMessage());
+        }
+
+        var eventToRollback = eventDto.toBuilder()
+                .status(FAIL)
+                .source(CURRENT_SOURCE)
+                .build();
+
+        eventToRollback = addHistory(eventToRollback, "Rollback executed for event: " + eventDto.eventId() + " on inventory");
+
+        kafkaProducer.sendEvent(jsonUtil.toJson(eventToRollback));
+    }
+
+    private void returnInventoryToPreviousValues(EventDto eventDto) {
+        log.info("Returning inventory to previous values for event: {}", eventDto);
+        var orderInventoryList = orderInventoryRepository.findByOrderIdAndTransactionId(eventDto.orderId(), eventDto.transactionId());
+        orderInventoryList.forEach(orderInventory -> {
+            var inventory = orderInventory.getInventory();
+            inventory.setAvailable(orderInventory.getOldQuantity());
+            inventoryRepository.save(inventory);
+        });
     }
 
 }
