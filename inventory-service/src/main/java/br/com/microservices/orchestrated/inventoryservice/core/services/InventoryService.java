@@ -1,8 +1,11 @@
 package br.com.microservices.orchestrated.inventoryservice.core.services;
 
+import br.com.microservices.orchestrated.inventoryservice.configs.exceptions.InsufficientInventoryException;
 import br.com.microservices.orchestrated.inventoryservice.configs.exceptions.NotFoundException;
 import br.com.microservices.orchestrated.inventoryservice.configs.exceptions.OrderAlreadyExistsException;
 import br.com.microservices.orchestrated.inventoryservice.core.dtos.EventDto;
+import br.com.microservices.orchestrated.inventoryservice.core.dtos.HistoryDto;
+import br.com.microservices.orchestrated.inventoryservice.core.dtos.OrderDto;
 import br.com.microservices.orchestrated.inventoryservice.core.dtos.OrderProductsDto;
 import br.com.microservices.orchestrated.inventoryservice.core.model.InventoryModel;
 import br.com.microservices.orchestrated.inventoryservice.core.model.OrderInventoryModel;
@@ -13,6 +16,11 @@ import br.com.microservices.orchestrated.inventoryservice.core.utils.JsonUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
+import static br.com.microservices.orchestrated.inventoryservice.core.enums.SagaStatus.SUCCESS;
 
 @Slf4j
 @Service
@@ -31,6 +39,8 @@ public class InventoryService {
             log.info("Updating inventory for event: {}", eventDto);
             checkCurrentValidation(eventDto);
             createOrderInventory(eventDto);
+            updateInventory(eventDto.payload());
+            eventDto = handleSuccess(eventDto);
         } catch (Exception ex) {
             log.error("Error while updating inventory ", ex);
         }
@@ -71,6 +81,47 @@ public class InventoryService {
                 .orderQuantity(product.quantity())
                 .newQuantity(inventory.getAvailable() - product.quantity())
                 .build();
+    }
+
+    private void updateInventory(OrderDto payload) {
+        log.info("Updating inventory for order: {}", payload);
+        payload.products().forEach(product -> {
+            var inventory = findInventoryByProductCode(product.product().code());
+            checkInventory(inventory.getAvailable(), product.quantity());
+            inventory.setAvailable(inventory.getAvailable() - product.quantity());
+            inventoryRepository.save(inventory);
+        });
+    }
+
+    public void checkInventory(int available, int quantity) {
+        log.info("Checking inventory: available={}, quantity={}", available, quantity);
+        if (available < quantity) {
+            log.error("Insufficient inventory: available={}, quantity={}", available, quantity);
+            throw new InsufficientInventoryException("Insufficient inventory: available=" + available + ", quantity=" + quantity);
+        }
+    }
+
+    private EventDto handleSuccess(EventDto eventDto) {
+        eventDto = eventDto.toBuilder()
+                .status(SUCCESS)
+                .source(CURRENT_SOURCE)
+                .build();
+
+        eventDto = addHistory(eventDto, "Inventory updated successfully!");
+
+        return eventDto;
+    }
+
+    private EventDto addHistory(EventDto eventDto, String message) {
+        var history = HistoryDto
+                .builder()
+                .message(message)
+                .source(eventDto.source())
+                .status(eventDto.status())
+                .createdAt(LocalDateTime.now(ZoneId.of("UTC")))
+                .build();
+
+        return eventDto.addToHistory(history);
     }
 
 }

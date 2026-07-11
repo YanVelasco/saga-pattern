@@ -228,4 +228,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(InsufficientInventoryException.class)
+    public ResponseEntity<ErrorResponse> handleInsufficientInventoryException(InsufficientInventoryException exception, WebRequest request) {
+        log.error("Insufficient inventory: {}", exception.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "INSUFFICIENT_INVENTORY",
+                exception.getMessage(),
+                request.getDescription(false).replace("uri=", "")
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
 }
