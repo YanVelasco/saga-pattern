@@ -8,7 +8,7 @@ import java.util.List;
 @Builder
 public record OrderDto(
         String orderId,
-        List<ProductDto> products,
+        List<OrderProductsDto> products,
         LocalDateTime createdAt,
         String transactionId,
         double totalAmount,
