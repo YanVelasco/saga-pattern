@@ -1,7 +1,6 @@
 package br.com.microservices.orchestrated.inventoryservice.configs.exceptions.globalexception;
 
-import br.com.microservices.orchestrated.inventoryservice.configs.exceptions.ErrorToSendEvent;
-import br.com.microservices.orchestrated.inventoryservice.configs.exceptions.ValidationException;
+import br.com.microservices.orchestrated.inventoryservice.configs.exceptions.*;
 import br.com.microservices.orchestrated.inventoryservice.configs.exceptions.response.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -188,7 +187,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ErrorToSendEvent.class)
-    public ResponseEntity<ErrorResponse> handleErrorToSendEvent(ErrorToSendEvent exception){
+    public ResponseEntity<ErrorResponse> handleErrorToSendEvent(ErrorToSendEvent exception) {
         log.error("Erro ao enviar evento para o Kafka", exception);
 
         ErrorResponse errorResponse = new ErrorResponse(
@@ -199,6 +198,34 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(OrderAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleOrderAlreadyExists(OrderAlreadyExistsException exception, WebRequest request) {
+        log.error("Order already exists: {}", exception.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "ORDER_ALREADY_EXISTS",
+                exception.getMessage(),
+                request.getDescription(false).replace("uri=", "")
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException exception, WebRequest request) {
+        log.error("Resource not found: {}", exception.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "NOT_FOUND",
+                exception.getMessage(),
+                request.getDescription(false).replace("uri=", "")
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
 }

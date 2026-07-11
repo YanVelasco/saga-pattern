@@ -44,8 +44,8 @@ public class OrderInventoryModel implements Serializable {
     @Column(name = "createAt", nullable = false, updatable = false)
     private LocalDateTime createAt;
 
-    @Column(name = "new_value", nullable = false)
-    private Integer newValue;
+    @Column(name = "new_quantity", nullable = false)
+    private Integer newQuantity;
 
     @Column(name = "updateAt", nullable = false)
     private LocalDateTime updateAt;
