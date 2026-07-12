@@ -1,5 +1,6 @@
 package br.com.microservices.orchestrated.orchestratorservice.core.consumers;
 
+import br.com.microservices.orchestrated.orchestratorservice.core.services.OrquestratorService;
 import br.com.microservices.orchestrated.orchestratorservice.core.utils.JsonUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 public class SagaOrchestratorConsumer {
 
     private final JsonUtil jsonUtil;
+    private final OrquestratorService orquestratorService;
 
     @KafkaListener(
             groupId = "${spring.kafka.consumer.group-id}",
@@ -20,7 +22,7 @@ public class SagaOrchestratorConsumer {
     public void consumeStartSagaEvent(String payload) {
         log.info("Received start saga message: {}", payload);
         var event = jsonUtil.toEvent(payload);
-        log.info(event.toString());
+        orquestratorService.startSaga(event);
     }
 
     @KafkaListener(
@@ -30,7 +32,7 @@ public class SagaOrchestratorConsumer {
     public void consumeFinishSuccessEvent(String payload) {
         log.info("Received finish success message: {}", payload);
         var event = jsonUtil.toEvent(payload);
-        log.info(event.toString());
+        orquestratorService.finishSagaSuccess(event);
     }
 
     @KafkaListener(
@@ -40,7 +42,7 @@ public class SagaOrchestratorConsumer {
     public void consumeFinishFailEvent(String payload) {
         log.info("Received finish fail message: {}", payload);
         var event = jsonUtil.toEvent(payload);
-        log.info(event.toString());
+        orquestratorService.finishSagaFail(event);
     }
 
     @KafkaListener(
@@ -50,7 +52,7 @@ public class SagaOrchestratorConsumer {
     public void consumeOrchestratorEvent(String payload) {
         log.info("Received orchestrator message: {}", payload);
         var event = jsonUtil.toEvent(payload);
-        log.info(event.toString());
+        orquestratorService.continueSaga(event);
     }
 
 }
