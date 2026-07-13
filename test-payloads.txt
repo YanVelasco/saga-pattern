@@ -16,6 +16,112 @@ PRODUTOS VÁLIDOS:
   HDMI_CABLE_2M         | POWERBANK_20000MAH     | MOUSEPAD_XXL_RGB
 
 ================================================================
+  CASOS DE USO - ORCHESTRATION SERVICE
+================================================================
+
+[UC-01] Iniciar saga - SUCESSO
+Topico de entrada: start-saga
+Payload de exemplo:
+{
+  "eventId": "evt-002",
+  "transactionId": "txn-002",
+  "orderId": "order-002",
+  "payload": {
+    "orderId": "order-002",
+    "transactionId": "txn-002",
+    "products": [
+      {
+        "product": {
+          "code": "LAPTOP_DELL_XPS15",
+          "unitValue": 5999.99
+        },
+        "quantity": 1
+      },
+      {
+        "product": {
+          "code": "MOUSE_LOGITECH_MX3",
+          "unitValue": 299.99
+        },
+        "quantity": 2
+      }
+    ],
+    "createdAt": "2026-07-09T14:00:00",
+    "totalAmount": 0,
+    "totalItems": 0
+  },
+  "source": "ORDER_SERVICE",
+  "status": "SUCCESS",
+  "eventHistory": [
+    {
+      "source": "ORDER_SERVICE",
+      "status": "SUCCESS",
+      "message": "Order created successfully",
+      "createdAt": "2026-07-09T14:00:00"
+    }
+  ],
+  "createdAt": "2026-07-09T14:00:00"
+}
+Resultado esperado:
+  - Orquestrador usa eventId/orderId/transactionId recebidos
+  - Define SOURCE=ORCHESTRATOR e STATUS=SUCCESS
+  - Encaminha para product-validation-success
+
+[UC-02] Iniciar saga - FALHA (produto invalido)
+Topico de entrada: start-saga
+Payload de exemplo:
+{
+  "eventId": "evt-003",
+  "transactionId": "txn-003",
+  "orderId": "order-003",
+  "payload": {
+    "orderId": "order-003",
+    "transactionId": "txn-003",
+    "products": [
+      {
+        "product": {
+          "code": "PRODUTO_INVALIDO_XYZ",
+          "unitValue": 999.99
+        },
+        "quantity": 1
+      }
+    ],
+    "createdAt": "2026-07-09T14:01:00",
+    "totalAmount": 0,
+    "totalItems": 0
+  },
+  "source": "ORDER_SERVICE",
+  "status": "SUCCESS",
+  "eventHistory": [
+    {
+      "source": "ORDER_SERVICE",
+      "status": "SUCCESS",
+      "message": "Order created successfully",
+      "createdAt": "2026-07-09T14:01:00"
+    }
+  ],
+  "createdAt": "2026-07-09T14:01:00"
+}
+Resultado esperado:
+  - Orquestrador inicia a saga normalmente para product-validation-success
+  - Product-validation devolve ROLLBACK_PENDING para orchestrator
+  - Saga segue fluxo de compensacao ate finalizar em FAIL
+
+[UC-03] Continuar saga por sucesso entre servicos
+Topico de entrada: orchestrator
+Payload de exemplo: use o JSON de retorno de cada servico no topico orchestrator
+Resultado esperado:
+  - SOURCE=PRODUCT_VALIDATION_SERVICE + STATUS=SUCCESS -> payment-success
+  - SOURCE=PAYMENT_SERVICE + STATUS=SUCCESS -> inventory-success
+  - SOURCE=INVENTORY_SERVICE + STATUS=SUCCESS -> finish-success
+
+[UC-04] Encerrar saga
+Topicos de entrada: finish-success e finish-fail
+Payload de exemplo: qualquer EventDto final do fluxo
+Resultado esperado:
+  - finish-success: publica em notify-ending com status final SUCCESS
+  - finish-fail: publica em notify-ending com status final FAIL
+
+================================================================
   [1] PRODUCT-VALIDATION-SERVICE - SUCESSO
   Tópico: product-validation-success
 ================================================================
