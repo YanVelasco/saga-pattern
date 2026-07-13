@@ -15,6 +15,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
@@ -81,14 +83,15 @@ public class PaymentService {
     }
 
     private double calculateAmount(EventDto eventDto) {
-        return eventDto
+        var totalAmount = eventDto
                 .payload()
                 .products()
                 .stream()
-                .mapToDouble(
-                        product -> product.quantity() * product.product().unitValue()
-                )
-                .sum();
+                .map(product -> BigDecimal.valueOf(product.product().unitValue())
+                        .multiply(BigDecimal.valueOf(product.quantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return totalAmount.setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
 
     private int calculateTotalItems(EventDto eventDto) {

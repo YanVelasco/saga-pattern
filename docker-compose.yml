@@ -151,7 +151,7 @@ services:
     ports:
       - "3000:3000"
 
-  orquestrator-service:
+  orchestrator-service:
     build: './orchestrator-service'
     container_name: orchestrator-service
     restart: always

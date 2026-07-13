@@ -21,87 +21,48 @@ PRODUTOS VÁLIDOS:
 
 [UC-01] Iniciar saga - SUCESSO
 Topico de entrada: start-saga
-Payload de exemplo:
+Payload REST de exemplo:
+POST /api/orders
 {
-  "eventId": "evt-002",
-  "transactionId": "txn-002",
-  "orderId": "order-002",
-  "payload": {
-    "orderId": "order-002",
-    "transactionId": "txn-002",
-    "products": [
-      {
-        "product": {
-          "code": "LAPTOP_DELL_XPS15",
-          "unitValue": 5999.99
-        },
-        "quantity": 1
-      },
-      {
-        "product": {
-          "code": "MOUSE_LOGITECH_MX3",
-          "unitValue": 299.99
-        },
-        "quantity": 2
-      }
-    ],
-    "createdAt": "2026-07-09T14:00:00",
-    "totalAmount": 0,
-    "totalItems": 0
-  },
-  "source": "ORDER_SERVICE",
-  "status": "SUCCESS",
-  "eventHistory": [
+  "products": [
     {
-      "source": "ORDER_SERVICE",
-      "status": "SUCCESS",
-      "message": "Order created successfully",
-      "createdAt": "2026-07-09T14:00:00"
+      "product": {
+        "code": "LAPTOP_DELL_XPS15",
+        "unitValue": 5999.99
+      },
+      "quantity": 1
+    },
+    {
+      "product": {
+        "code": "MOUSE_LOGITECH_MX3",
+        "unitValue": 299.99
+      },
+      "quantity": 2
     }
-  ],
-  "createdAt": "2026-07-09T14:00:00"
+  ]
 }
 Resultado esperado:
-  - Orquestrador usa eventId/orderId/transactionId recebidos
+  - Order-service cria e publica evento com eventId/orderId/transactionId
   - Define SOURCE=ORCHESTRATOR e STATUS=SUCCESS
   - Encaminha para product-validation-success
 
 [UC-02] Iniciar saga - FALHA (produto invalido)
 Topico de entrada: start-saga
-Payload de exemplo:
+Payload REST de exemplo:
+POST /api/orders
 {
-  "eventId": "evt-003",
-  "transactionId": "txn-003",
-  "orderId": "order-003",
-  "payload": {
-    "orderId": "order-003",
-    "transactionId": "txn-003",
-    "products": [
-      {
-        "product": {
-          "code": "PRODUTO_INVALIDO_XYZ",
-          "unitValue": 999.99
-        },
-        "quantity": 1
-      }
-    ],
-    "createdAt": "2026-07-09T14:01:00",
-    "totalAmount": 0,
-    "totalItems": 0
-  },
-  "source": "ORDER_SERVICE",
-  "status": "SUCCESS",
-  "eventHistory": [
+  "products": [
     {
-      "source": "ORDER_SERVICE",
-      "status": "SUCCESS",
-      "message": "Order created successfully",
-      "createdAt": "2026-07-09T14:01:00"
+      "product": {
+        "code": "PRODUTO_INVALIDO_XYZ",
+        "unitValue": 999.99
+      },
+      "quantity": 1
     }
-  ],
-  "createdAt": "2026-07-09T14:01:00"
+  ]
 }
 Resultado esperado:
+  - Order-service cria e publica evento com eventId/orderId/transactionId
   - Orquestrador inicia a saga normalmente para product-validation-success
   - Product-validation devolve ROLLBACK_PENDING para orchestrator
   - Saga segue fluxo de compensacao ate finalizar em FAIL
