@@ -29,7 +29,7 @@ public class OrquestratorService {
 
     public void startSaga(EventDto eventDto) {
         log.info("Starting saga with event: {}", eventDto);
-        eventDto.toBuilder()
+        eventDto = eventDto.toBuilder()
                 .source(ORCHESTRATOR)
                 .status(SUCCESS)
                 .build();
@@ -38,33 +38,33 @@ public class OrquestratorService {
         log.info("Topic: {}", topic);
 
         log.info("Sending event to topic: {} with event: {}", topic, eventDto);
-        addHistory(eventDto, "Starting saga with event: " + eventDto);
+        eventDto = addHistory(eventDto, "Starting saga with event: " + eventDto);
 
         sendToProducerWithTopic(eventDto, topic.getTopic());
     }
 
     public void finishSagaSuccess(EventDto eventDto) {
         log.info("Finishing saga with event: {}", eventDto);
-        eventDto.toBuilder()
+        eventDto = eventDto.toBuilder()
                 .source(ORCHESTRATOR)
                 .status(SUCCESS)
                 .build();
 
         log.info("Saga finished successfully with event: {}", eventDto);
-        addHistory(eventDto, "Finishing saga with event: " + eventDto);
+        eventDto = addHistory(eventDto, "Finishing saga with event: " + eventDto);
 
         notifyEndingSaga(eventDto);
     }
 
     public void finishSagaFail(EventDto eventDto) {
         log.info("Finishing saga FAIL with errors for: {}", eventDto);
-        eventDto.toBuilder()
+        eventDto = eventDto.toBuilder()
                 .source(ORCHESTRATOR)
                 .status(FAIL)
                 .build();
 
         log.info("Saga finished with errors for event: {}", eventDto);
-        addHistory(eventDto, "Finishing saga FAIL with errors for event: " + eventDto);
+        eventDto = addHistory(eventDto, "Finishing saga FAIL with errors for event: " + eventDto);
 
         notifyEndingSaga(eventDto);
     }
@@ -80,7 +80,7 @@ public class OrquestratorService {
         return sagaExecutionController.getNextTopic(eventDto);
     }
 
-    private void addHistory(EventDto eventDto, String message) {
+    private EventDto addHistory(EventDto eventDto, String message) {
         var history = HistoryDto
                 .builder()
                 .message(message)
@@ -89,14 +89,14 @@ public class OrquestratorService {
                 .createdAt(LocalDateTime.now(ZoneId.of("UTC")))
                 .build();
 
-        eventDto.addToHistory(history);
+        return eventDto.addToHistory(history);
     }
 
     private void notifyEndingSaga(EventDto eventDto) {
-        sagaOrchestratorProducer.sendEvent(jsonUtil.toJson(eventDto), NOTIFY_ENDING.getTopic());
+        sagaOrchestratorProducer.sendEvent(NOTIFY_ENDING.getTopic(), jsonUtil.toJson(eventDto));
     }
 
     private void sendToProducerWithTopic(EventDto eventDto, String topic) {
-        sagaOrchestratorProducer.sendEvent(jsonUtil.toJson(eventDto), topic);
+        sagaOrchestratorProducer.sendEvent(topic, jsonUtil.toJson(eventDto));
     }
 }

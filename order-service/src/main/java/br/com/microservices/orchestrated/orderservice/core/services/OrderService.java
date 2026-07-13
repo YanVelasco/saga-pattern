@@ -2,7 +2,6 @@ package br.com.microservices.orchestrated.orderservice.core.services;
 
 import br.com.microservices.orchestrated.orderservice.core.document.EventDocument;
 import br.com.microservices.orchestrated.orderservice.core.document.OrderDocument;
-import br.com.microservices.orchestrated.orderservice.core.document.OrderProductsDocument;
 import br.com.microservices.orchestrated.orderservice.core.dtos.OrderRequestDto;
 import br.com.microservices.orchestrated.orderservice.core.producers.SagaProducer;
 import br.com.microservices.orchestrated.orderservice.core.repositories.OrderRepository;
@@ -30,10 +29,7 @@ public class OrderService {
         
         var orderDocument = OrderDocument
                 .builder()
-                .products(orderRequestDto.products()
-                        .stream()
-                        .map(OrderProductsDocument::getProduct)
-                        .toList())
+                .products(orderRequestDto.products())
                 .createdAt(LocalDateTime.now(ZoneId.of("UTC")))
                 .transactionId(
                         String.format(

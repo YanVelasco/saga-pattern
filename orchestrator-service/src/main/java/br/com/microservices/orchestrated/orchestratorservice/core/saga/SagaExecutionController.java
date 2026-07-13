@@ -19,7 +19,7 @@ public class SagaExecutionController {
     private static final String SAGA_ID_FORMAT = "ORDER_ID: %s | TRANSACTION_ID: %s | EVENT_ID: %s";
 
     public Topics getNextTopic(EventDto eventDto) {
-        if (isEmpty(eventDto.status()) || isEmpty(eventDto.source())) {
+        if (isEmpty(eventDto) || isEmpty(eventDto.status()) || isEmpty(eventDto.source())) {
             throw new ValidationException("Status and source are required to determine the next topic.");
         }
         var topic = findTopicBySourceAndStatus(eventDto);

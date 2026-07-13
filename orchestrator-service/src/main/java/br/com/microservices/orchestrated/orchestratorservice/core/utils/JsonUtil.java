@@ -1,6 +1,8 @@
 package br.com.microservices.orchestrated.orchestratorservice.core.utils;
 
+import br.com.microservices.orchestrated.orchestratorservice.configs.exceptions.ValidationException;
 import br.com.microservices.orchestrated.orchestratorservice.core.dtos.EventDto;
+import br.com.microservices.orchestrated.orchestratorservice.core.dtos.OrderDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

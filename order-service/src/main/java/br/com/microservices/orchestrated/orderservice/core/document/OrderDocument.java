@@ -17,7 +17,7 @@ public class OrderDocument {
 
     @Id
     private String orderId;
-    private List<ProductDocument> products;
+    private List<OrderProductsDocument> products;
     private LocalDateTime createdAt;
     private String transactionId;
     private double totalAmount;
